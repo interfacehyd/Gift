@@ -118,7 +118,6 @@
     padding: 20px;
     width: 95%;
     max-width: 400px;
-    /* Allows the popup to be tall, but scrolls if it hits screen edge */
     max-height: 90vh; 
     overflow-y: auto; 
     color: #220022;
@@ -141,16 +140,13 @@
     letter-spacing: 1px;
   }
 
-  /* --- VIDEO FIX --- */
+  /* VIDEO STYLE */
   video.reveal-video {
     width: 100%;
-    /* Let height calculate automatically based on video file */
     height: auto; 
-    /* REMOVED max-height constraint */
     border-radius: 12px;
     margin-bottom: 15px;
     box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-    /* Contain ensures the whole video fits inside the box */
     object-fit: contain; 
     background: #000;
   }
@@ -231,8 +227,6 @@ const pins = ["🎄", "⭐", "🔔", "🧦", "🎁", "🎅"];
 const reels = [document.getElementById("reel1"), document.getElementById("reel2"), document.getElementById("reel3")];
 let spinCount = 0;
 const spinsAllowed = 5;
-
-// Randomly decide which spin wins (between 2 and 5)
 const winningSpin = Math.floor(Math.random() * 4) + 2; 
 const spinSound = document.getElementById("spinSound");
 
@@ -252,7 +246,6 @@ function fillReel(reel, targetSymbol = null) {
   for (let i = 0; i < 7; i++) {
     const div = document.createElement("div");
     div.className = "symbol";
-    
     if (i === 3 && targetSymbol) {
       div.textContent = targetSymbol;
     } else {
@@ -260,7 +253,6 @@ function fillReel(reel, targetSymbol = null) {
     }
     inner.appendChild(div);
   }
-  
   inner.style.transition = "none";
   inner.style.transform = "translateY(0)";
 }
@@ -277,18 +269,14 @@ function initReels() {
 function spinReel(reel, duration, targetSymbol) {
   return new Promise(resolve => {
     const inner = reel.querySelector(".reel-inner");
-    
     inner.style.transition = "none";
     inner.style.transform = "translateY(0)";
     void inner.offsetWidth;
-    
     const symbolH = reel.querySelector(".symbol").offsetHeight;
     const reelH = reel.offsetHeight;
     const finalPos = (3.5 * symbolH) - (0.5 * reelH);
-
     inner.style.transition = `transform ${duration}ms cubic-bezier(0.22,0.61,0.36,1)`;
     inner.style.transform = `translateY(-${finalPos}px)`;
-    
     setTimeout(() => {
         resolve(inner.children[3].textContent);
     }, duration);
@@ -344,13 +332,14 @@ document.getElementById("spinBtn").addEventListener("click", async () => {
 
 function showWinPopup() { document.getElementById("winPopup").style.display = "flex"; }
 
-/* CONFETTI */
+/* CONFETTI - UPDATED TO REMOVE AFTER FINISHING */
 const canvas = document.getElementById("confettiCanvas");
 const ctx = canvas.getContext("2d");
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
-const pieces = [];
+let animationId = null; // To store the animation loop ID
 
+const pieces = [];
 for (let i=0;i<150;i++){
   pieces.push({
     x:Math.random()*canvas.width,
@@ -369,15 +358,27 @@ function drawConfetti() {
     ctx.fillStyle=p.color;
     ctx.fillRect(p.x,p.y,p.size,p.size);
   });
-  requestAnimationFrame(drawConfetti);
+  // Keep looping and save the ID
+  animationId = requestAnimationFrame(drawConfetti);
 }
 
 function launchConfetti(){
-  drawConfetti();
+  // If already running, stop previous instance
+  if (animationId) cancelAnimationFrame(animationId);
+  
+  // Reset positions for a fresh launch
+   pieces.forEach(p => {
+      p.y = Math.random() * -canvas.height;
+  });
+
+  drawConfetti(); // Start animation
+  
+  // Stop and remove completely after 4 seconds
   setTimeout(()=>{
-      pieces.forEach(p=>p.speed=0);
-      ctx.clearRect(0,0,canvas.width,canvas.height);
-  }, 5000);
+      cancelAnimationFrame(animationId); // Stop the loop
+      animationId = null;
+      ctx.clearRect(0,0,canvas.width,canvas.height); // Wipe the screen
+  }, 4000);
 }
 
 initReels();
