@@ -6,6 +6,7 @@
 <title>Christmas Gift</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@600&display=swap');
+  
   body {
     margin: 0;
     font-family: 'Poppins', sans-serif;
@@ -15,7 +16,9 @@
     align-items: center;
     height: 100vh;
     color: #fff;
+    overflow: hidden; 
   }
+
   .container {
     width: 360px;
     background: #4b3383;
@@ -24,10 +27,14 @@
     box-shadow: 0 8px 25px rgb(255 255 255 / 0.1);
     text-align: center;
     position: relative;
+    z-index: 10;
   }
+
   h1 { font-weight: 600; margin: 0 0 10px; font-size: 28px; }
   p.subtitle { margin: 0 0 10px; font-weight: 400; font-size: 16px; color: #d9c9ff; }
   p.disclaimer { font-size: 14px; color: #ffd700; margin-bottom: 20px; }
+
+  /* Slot Machine Box */
   .slot-machine {
     background: #b18fff;
     border-radius: 25px;
@@ -36,13 +43,19 @@
     position: relative;
     display: block;
   }
-  .reels { display: flex; justify-content: space-between; padding: 0 45px; position: relative; }
+
+  .reels { 
+    display: flex; 
+    justify-content: space-between; 
+    padding: 0 45px; 
+    position: relative; 
+  }
   
   .reel {
     background: #e7d9ff;
     border-radius: 20px;
     width: 90px;
-    height: 140px; /* Desktop Height */
+    height: 140px; 
     overflow: hidden;
     position: relative;
     box-shadow: inset 0 0 20px #bfabff;
@@ -52,7 +65,6 @@
   .reel-inner {
     position: absolute;
     width: 100%;
-    /* REMOVED top:50% here to fix mobile alignment issues. We calculate position in JS now. */
     top: 0; 
     display: flex;
     flex-direction: column;
@@ -89,7 +101,7 @@
     cursor: not-allowed;
   }
   
-  /* Popup Styles */
+  /* POPUP STYLES */
   #winPopup {
     position: fixed;
     inset: 0;
@@ -99,14 +111,16 @@
     align-items: center;
     z-index: 9999;
   }
+  
   #winPopup .popup-content {
     background: white;
     border-radius: 20px;
     padding: 20px;
     width: 95%;
     max-width: 400px;
-    max-height: 90vh;
-    overflow-y: auto;
+    /* Allows the popup to be tall, but scrolls if it hits screen edge */
+    max-height: 90vh; 
+    overflow-y: auto; 
     color: #220022;
     text-align: center;
     box-shadow: 0 0 20px #a354f1;
@@ -114,8 +128,10 @@
     flex-direction: column;
     align-items: center;
   }
+  
   #winPopup h2 { margin-top: 0; font-size: 22px; margin-bottom: 10px; }
   #winPopup img.flyer { width: 100%; border-radius: 12px; margin-bottom: 5px; }
+  
   h3.video-header {
     margin: 10px 0 8px 0;
     font-size: 16px;
@@ -124,14 +140,21 @@
     text-transform: uppercase;
     letter-spacing: 1px;
   }
+
+  /* --- VIDEO FIX --- */
   video.reveal-video {
     width: 100%;
+    /* Let height calculate automatically based on video file */
+    height: auto; 
+    /* REMOVED max-height constraint */
     border-radius: 12px;
     margin-bottom: 15px;
     box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-    max-height: 400px; 
-    object-fit: cover;
+    /* Contain ensures the whole video fits inside the box */
+    object-fit: contain; 
+    background: #000;
   }
+
   #winPopup a#map-btn {
     display: inline-block;
     background: #7e4bba;
@@ -144,6 +167,7 @@
     margin-bottom: 10px;
   }
   #winPopup a#map-btn:hover { background: #a375e8; }
+  
   #confettiCanvas { position: fixed; inset: 0; pointer-events: none; z-index: 10000; }
   
   .arrow { position: absolute; top: 50%; width: 0; height: 0; border-top: 25px solid transparent; border-bottom: 25px solid transparent; cursor: default; user-select: none; }
@@ -152,7 +176,6 @@
   
   @media (max-width: 400px) {
     .container { width: 95vw; }
-    /* Adjusted sizing for better mobile fit */
     .reel { width: 28vw; height: 45vw; }
     .symbol { font-size: 16vw; height: 22vw; line-height: 22vw; }
     button#spinBtn { width: 95%; font-size: 18px; }
@@ -168,6 +191,7 @@
   <h1>Spin & Win!</h1>
   <p class="subtitle">🎁 Your surprise waits here!</p>
   <p class="disclaimer">Only 5 attempts allowed</p>
+  
   <div class="slot-machine" id="slotMachine">
     <div class="arrow left"></div>
     <div class="reels">
@@ -177,6 +201,7 @@
     </div>
     <div class="arrow right"></div>
   </div>
+  
   <button id="spinBtn">Spin</button>
 </div>
 
@@ -188,6 +213,7 @@
      
     <video class="reveal-video" controls autoplay loop muted playsinline>
       <source src="reveal.mp4" type="video/mp4">
+      Your browser does not support the video tag.
     </video>
 
     <a id="map-btn" href="https://maps.app.goo.gl/LdQ7m3eLDrETKzj48" target="_blank">
@@ -200,25 +226,26 @@
 <audio id="spinSound" src="https://cdn.pixabay.com/download/audio/2021/11/11/audio_72b9e53c02.mp3?filename=slot-machine-spin-6105.mp3" preload="auto"></audio>
 
 <script>
+/* CONFIGURATION */
 const pins = ["🎄", "⭐", "🔔", "🧦", "🎁", "🎅"];
 const reels = [document.getElementById("reel1"), document.getElementById("reel2"), document.getElementById("reel3")];
 let spinCount = 0;
 const spinsAllowed = 5;
-// Determine which spin will be the lucky one (between 2 and 5)
+
+// Randomly decide which spin wins (between 2 and 5)
 const winningSpin = Math.floor(Math.random() * 4) + 2; 
 const spinSound = document.getElementById("spinSound");
 
-// Calculate position to center the 4th symbol (index 3)
+/* DYNAMIC ALIGNMENT */
 function setPosition(reel) {
     const symbolH = reel.querySelector(".symbol").offsetHeight;
     const reelH = reel.offsetHeight;
-    // Math: Center of Reel - Center of Symbol 3
-    // We shift the strip up so Symbol 3 is in the middle
     const centerOffset = (3.5 * symbolH) - (0.5 * reelH);
     const inner = reel.querySelector(".reel-inner");
     inner.style.transform = `translateY(-${centerOffset}px)`;
 }
 
+/* POPULATE REELS */
 function fillReel(reel, targetSymbol = null) {
   const inner = reel.querySelector(".reel-inner");
   inner.innerHTML = "";
@@ -226,54 +253,42 @@ function fillReel(reel, targetSymbol = null) {
     const div = document.createElement("div");
     div.className = "symbol";
     
-    // If it's the middle symbol (index 3) and we have a target, use it
     if (i === 3 && targetSymbol) {
       div.textContent = targetSymbol;
     } else {
-      // Pick random symbol
       div.textContent = pins[Math.floor(Math.random() * pins.length)];
     }
     inner.appendChild(div);
   }
   
-  // Reset Position instantly without animation
   inner.style.transition = "none";
-  // We use a small offset (0) initially or a specific start point to simulate spinning loop
-  // But to keep it simple, we start at "0" which shows the top, then snap to result? 
-  // Better: Start aligned to a previous result.
-  // Simple fix: Reset to 0 (shows indices 0,1) then spin to show index 3
   inner.style.transform = "translateY(0)";
 }
 
+/* INITIAL SETUP */
 function initReels() {
   reels.forEach(r => {
       fillReel(r);
-      // Immediately align them so they look good on load
       setPosition(r);
   });
 }
 
+/* SPIN ANIMATION */
 function spinReel(reel, duration, targetSymbol) {
   return new Promise(resolve => {
     const inner = reel.querySelector(".reel-inner");
     
-    // 1. Reset to top (simulates loop start)
     inner.style.transition = "none";
     inner.style.transform = "translateY(0)";
-    
-    // Force browser reflow
     void inner.offsetWidth;
     
-    // 2. Animate to the winning position
     const symbolH = reel.querySelector(".symbol").offsetHeight;
     const reelH = reel.offsetHeight;
-    // Calculate the exact center position for index 3
     const finalPos = (3.5 * symbolH) - (0.5 * reelH);
 
     inner.style.transition = `transform ${duration}ms cubic-bezier(0.22,0.61,0.36,1)`;
     inner.style.transform = `translateY(-${finalPos}px)`;
     
-    // Resolve with the actual symbol text
     setTimeout(() => {
         resolve(inner.children[3].textContent);
     }, duration);
@@ -291,6 +306,7 @@ function updateSpinBtn() {
   }
 }
 
+/* GAME LOGIC */
 document.getElementById("spinBtn").addEventListener("click", async () => {
   spinCount++;
   const btn = document.getElementById("spinBtn");
@@ -299,31 +315,26 @@ document.getElementById("spinBtn").addEventListener("click", async () => {
   spinSound.currentTime = 0;
   spinSound.play();
 
-  // Logic: Is this the forced win turn?
   let targetForced = null;
   if (spinCount === winningSpin) {
-      // Pick a random symbol to be the winner (Star, Santa, Bell, etc)
       targetForced = pins[Math.floor(Math.random() * pins.length)];
   }
 
-  // Refill reels
   reels.forEach(r => fillReel(r, targetForced));
 
-  // Spin them
   await Promise.all([
     spinReel(reels[0], 1300),
     spinReel(reels[1], 1600),
     spinReel(reels[2], 1900)
   ]);
 
-  // Check Win: Do all 3 center symbols match?
   const sym1 = reels[0].querySelector(".reel-inner").children[3].textContent;
   const sym2 = reels[1].querySelector(".reel-inner").children[3].textContent;
   const sym3 = reels[2].querySelector(".reel-inner").children[3].textContent;
 
   if (sym1 === sym2 && sym2 === sym3) {
     launchConfetti();
-    setTimeout(showWinPopup, 500); // Small delay for effect
+    setTimeout(showWinPopup, 500); 
     const video = document.querySelector(".reveal-video");
     if(video) { video.play().catch(e => console.log("Autoplay blocked")); } 
   }
@@ -333,29 +344,44 @@ document.getElementById("spinBtn").addEventListener("click", async () => {
 
 function showWinPopup() { document.getElementById("winPopup").style.display = "flex"; }
 
-// Confetti Code
+/* CONFETTI */
 const canvas = document.getElementById("confettiCanvas");
 const ctx = canvas.getContext("2d");
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 const pieces = [];
+
 for (let i=0;i<150;i++){
-  pieces.push({x:Math.random()*canvas.width,y:Math.random()*-canvas.height,size:Math.random()*7+3,color:`hsl(${Math.random()*360},100%,70%)`,speed:Math.random()*3+2});
-}
-function drawConfetti() {
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  pieces.forEach(p=>{p.y+=p.speed;if(p.y>canvas.height)p.y=-10;ctx.fillStyle=p.color;ctx.fillRect(p.x,p.y,p.size,p.size);});
-  requestAnimationFrame(drawConfetti);
-}
-function launchConfetti(){
-  drawConfetti();
-  setTimeout(()=>{pieces.forEach(p=>p.speed=0);ctx.clearRect(0,0,canvas.width,canvas.height);},5000);
+  pieces.push({
+    x:Math.random()*canvas.width,
+    y:Math.random()*-canvas.height,
+    size:Math.random()*7+3,
+    color:`hsl(${Math.random()*360},100%,70%)`,
+    speed:Math.random()*3+2
+  });
 }
 
-// Initialization
+function drawConfetti() {
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  pieces.forEach(p=>{
+    p.y+=p.speed;
+    if(p.y>canvas.height) p.y=-10;
+    ctx.fillStyle=p.color;
+    ctx.fillRect(p.x,p.y,p.size,p.size);
+  });
+  requestAnimationFrame(drawConfetti);
+}
+
+function launchConfetti(){
+  drawConfetti();
+  setTimeout(()=>{
+      pieces.forEach(p=>p.speed=0);
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+  }, 5000);
+}
+
 initReels();
 updateSpinBtn();
-// Recalculate positions on resize to keep center alignment
 window.addEventListener("resize",()=>{
     canvas.width=window.innerWidth;
     canvas.height=window.innerHeight;
